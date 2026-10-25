@@ -1,4 +1,12 @@
-import { pipeline, FeatureExtractionPipeline } from "@huggingface/transformers";
+import { pipeline, env, FeatureExtractionPipeline } from "@huggingface/transformers";
+import path from "path";
+import os from "os";
+
+// In serverless environments (like Vercel / AWS Lambda), the filesystem is read-only except /tmp
+if (process.env.VERCEL || process.env.NODE_ENV === "production" || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    env.cacheDir = path.join(os.tmpdir(), ".transformers_cache");
+    env.localModelPath = path.join(os.tmpdir(), ".transformers_cache");
+}
 
 // Global singleton pipeline cache across requests
 let extractorPromise: Promise<FeatureExtractionPipeline> | null = null;

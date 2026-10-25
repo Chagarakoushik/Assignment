@@ -48,13 +48,19 @@ export default function Home() {
         body: formData, // Auto sets multipart/form-data headers
       });
 
-      const data = await res.json();
-      if (res.ok) {
-        setUploadMessage(`Success: ${data.message}`);
-        setTextInput("");
-        setImageFile(null);
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        const data = await res.json();
+        if (res.ok) {
+          setUploadMessage(`Success: ${data.message}`);
+          setTextInput("");
+          setImageFile(null);
+        } else {
+          setUploadMessage(`Error: ${data.error || "Failed to upload"}`);
+        }
       } else {
-        setUploadMessage(`Error: ${data.error}`);
+        const text = await res.text();
+        setUploadMessage(`Error (${res.status}): ${text.slice(0, 150) || "Server error"}`);
       }
     } catch (err: any) {
       setUploadMessage(`Error: ${err.message || "Failed to upload"}`);
@@ -70,12 +76,18 @@ export default function Home() {
     setUploadMessage("");
     try {
       const res = await fetch("/api/clear", { method: "POST" });
-      const data = await res.json();
-      if (res.ok) {
-        setUploadMessage(`Success: ${data.message}`);
-        setMessages([]); // Also clear chat messages locally
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        const data = await res.json();
+        if (res.ok) {
+          setUploadMessage(`Success: ${data.message}`);
+          setMessages([]); // Also clear chat messages locally
+        } else {
+          setUploadMessage(`Error: ${data.error || "Failed to clear database"}`);
+        }
       } else {
-        setUploadMessage(`Error: ${data.error}`);
+        const text = await res.text();
+        setUploadMessage(`Error (${res.status}): ${text.slice(0, 150) || "Server error"}`);
       }
     } catch (err: any) {
       setUploadMessage(`Error: ${err.message || "Failed to clear database"}`);
@@ -102,7 +114,18 @@ export default function Home() {
       });
 
       if (!res.ok || !res.body) {
-        throw new Error("Failed to get response");
+        let errMsg = "Failed to get response";
+        try {
+          const contentType = res.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const errData = await res.json();
+            errMsg = errData.error || errMsg;
+          } else {
+            const errText = await res.text();
+            if (errText) errMsg = `${errMsg} (${res.status}): ${errText.slice(0, 120)}`;
+          }
+        } catch (_) {}
+        throw new Error(errMsg);
       }
 
       const reader = res.body.getReader();
