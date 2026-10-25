@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { qdrantClient, COLLECTION_NAME, ensureCollectionExists } from "@/utils/qdrant";
 
+export const maxDuration = 60;
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
     try {
         // 1. Delete the existing collection

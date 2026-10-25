@@ -17,6 +17,9 @@ export const COLLECTION_NAME = "multimodal_rag_chatbot";
 export const VECTOR_SIZE = 384; // size for sentence-transformers/all-MiniLM-L6-v2
 
 export async function ensureCollectionExists() {
+    if (!process.env.QDRANT_URL || !process.env.QDRANT_API_KEY) {
+        throw new Error("QDRANT_URL or QDRANT_API_KEY is not defined in Environment Variables. Add them in Vercel Settings > Environment Variables.");
+    }
     try {
         const collections = await qdrantClient.getCollections();
         const exists = collections.collections.some((c) => c.name === COLLECTION_NAME);

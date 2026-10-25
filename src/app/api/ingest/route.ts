@@ -6,6 +6,7 @@ import { extractTextFromImage } from "@/utils/ocr";
 
 // Max duration for severless function
 export const maxDuration = 60; // 60 seconds
+export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
     try {

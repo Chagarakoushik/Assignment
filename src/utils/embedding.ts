@@ -1,21 +1,24 @@
-import { pipeline, env, FeatureExtractionPipeline } from "@huggingface/transformers";
-import path from "path";
-import os from "os";
+// Dynamic loader for Transformers.js to prevent module-level import crashes on Vercel
+let extractorPromise: any = null;
 
-// In serverless environments (like Vercel / AWS Lambda), the filesystem is read-only except /tmp
-if (process.env.VERCEL || process.env.NODE_ENV === "production" || process.env.AWS_LAMBDA_FUNCTION_NAME) {
-    env.cacheDir = path.join(os.tmpdir(), ".transformers_cache");
-    env.localModelPath = path.join(os.tmpdir(), ".transformers_cache");
-}
-
-// Global singleton pipeline cache across requests
-let extractorPromise: Promise<FeatureExtractionPipeline> | null = null;
-
-async function getExtractor(): Promise<FeatureExtractionPipeline> {
+async function getExtractor() {
     if (!extractorPromise) {
-        extractorPromise = pipeline("feature-extraction", "Xenova/all-MiniLM-L6-v2");
+        extractorPromise = (async () => {
+            const { pipeline, env } = await import("@huggingface/transformers");
+
+            // Serverless environments (Vercel / AWS Lambda) only allow writes in /tmp
+            if (process.env.VERCEL || process.env.NODE_ENV === "production" || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+                const os = await import("os");
+                const path = await import("path");
+                const tmpCache = path.join(os.tmpdir(), ".transformers_cache");
+                env.cacheDir = tmpCache;
+                env.localModelPath = tmpCache;
+            }
+
+            return await pipeline("feature-extraction", "Xenova/all-MiniLM-L6-v2");
+        })();
     }
-    return extractorPromise;
+    return await extractorPromise;
 }
 
 export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
@@ -33,9 +36,9 @@ export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
             return [list as unknown as number[]];
         }
         return [];
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error generating embeddings via Transformers.js:", error);
-        throw error;
+        throw new Error(`Embedding model error: ${error.message || String(error)}`);
     }
 }
 
