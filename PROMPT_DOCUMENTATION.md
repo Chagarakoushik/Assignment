@@ -2,6 +2,7 @@
 
 **Project:** Multimodal RAG Chatbot  
 **Developer:** Chagara Kousik
+
 **Stack:** Next.js 16, TypeScript, Groq, Qdrant Cloud, Hugging Face Transformers.js, Tavily Search, OCR.space  
 
 ---
