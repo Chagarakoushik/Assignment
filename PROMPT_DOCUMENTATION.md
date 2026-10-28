@@ -1,7 +1,7 @@
 # Prompt Documentation & AI Development Log
 
 **Project:** Multimodal RAG Chatbot  
-**Developer:** Chagara Kousik
+**Developer:** Chagara Koushik
 
 **Stack:** Next.js 16, TypeScript, Groq, Qdrant Cloud, Hugging Face Transformers.js, Tavily Search, OCR.space  
 
